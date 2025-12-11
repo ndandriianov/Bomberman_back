@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: bomberman_server
+    ports:
+      - "8765:8765"
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+#  client:
+#    build:
+#      context: .
+#      dockerfile: client/Dockerfile
+#    container_name: bomberman_client
+#    depends_on:
+#      - server
+#    restart: on-failure
