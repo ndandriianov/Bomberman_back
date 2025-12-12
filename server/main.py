@@ -166,7 +166,7 @@ class Game:
             print(f"Игрок '{player.name}' ({player_id}) удален.")
             self.check_game_start() # Проверяем, не отменился ли старт игры
 
-    def handle_input(self, player_id, action):
+    async def handle_input(self, player_id, action):
         player = self.players.get(player_id)
         if not player: return
 
@@ -178,13 +178,30 @@ class Game:
             elif action['type'] == 'set_character':
                 new_name = action.get('characterName', '').strip()
                 if new_name:
+                    # --- НОВАЯ ПРОВЕРКА ---
+                    # Проверяем, что ни один другой игрок не использует это имя
+                    for other in self.players.values():
+                        if other.id != player.id and other.characterName == new_name:
+                            # Имя занято — отправляем ошибку клиенту
+                            try:
+                                ws = PLAYER_CLIENTS[player_id]
+                                await ws.send(json.dumps({
+                                    "type": "error",
+                                    "message": "Это имя уже занято другим игроком"
+                                }))
+                            except:
+                                pass
+                            print(
+                                f"ОТКЛОНЕНО: игрок {player.name} хотел установить characterName '{new_name}', но оно занято.")
+                            return
+                    # --------------------------------------
+
                     player.characterName = new_name
                     print(f"Игрок {player.name} ({player_id}) установил characterName: {new_name}")
-            return
 
         if self.state == "IN_PROGRESS" and player.alive:
-            if action['type'] == 'move': player.move(action['dx'], action['dy'], self)
-            elif action['type'] == 'place_bomb': self.place_bomb(player.x, player.y)
+                if action['type'] == 'move': player.move(action['dx'], action['dy'], self)
+                elif action['type'] == 'place_bomb': self.place_bomb(player.x, player.y)
 
     def place_bomb(self, x, y):
         if not any(b.x == x and b.y == y for b in self.bombs): self.bombs.append(Bomb(x, y))
