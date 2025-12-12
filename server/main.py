@@ -200,8 +200,8 @@ class Game:
                     print(f"Игрок {player.name} ({player_id}) установил characterName: {new_name}")
 
         if self.state == "IN_PROGRESS" and player.alive:
-                if action['type'] == 'move': player.move(action['dx'], action['dy'], self)
-                elif action['type'] == 'place_bomb': self.place_bomb(player.x, player.y)
+            if action['type'] == 'move': player.move(action['dx'], action['dy'], self)
+            elif action['type'] == 'place_bomb': self.place_bomb(player.x, player.y)
 
     def place_bomb(self, x, y):
         if not any(b.x == x and b.y == y for b in self.bombs): self.bombs.append(Bomb(x, y))
@@ -342,7 +342,7 @@ async def handler(websocket):
         if client_type == "player":
             async for message in websocket:
                 action = json.loads(message)
-                GAME.handle_input(client_id, action)
+                await GAME.handle_input(client_id, action)
         else:
             await websocket.wait_closed()
 
